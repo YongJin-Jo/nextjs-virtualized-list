@@ -1,4 +1,5 @@
 import type { Webtoon } from "@/types/webtoon";
+import type { SortType, GenreFilter } from "@/services/webtoon.service";
 
 export interface WebtoonResponse {
   items: Webtoon[];
@@ -9,6 +10,11 @@ export interface WebtoonResponse {
     totalPages: number;
     hasNextPage: boolean;
   };
+}
+
+export interface FetchWebtoonsOptions {
+  genre?: GenreFilter;
+  sort?: SortType;
 }
 
 export class ApiError extends Error {
@@ -24,8 +30,9 @@ export class ApiError extends Error {
 
 export async function fetchWebtoons(
   page: number,
-  count: number = 20,
-  query?: string
+  count: number = 16,
+  query?: string,
+  options?: FetchWebtoonsOptions
 ): Promise<WebtoonResponse> {
   const params = new URLSearchParams({
     page: String(page),
@@ -34,6 +41,14 @@ export async function fetchWebtoons(
 
   if (query) {
     params.set("q", query);
+  }
+
+  if (options?.genre) {
+    params.set("genre", options.genre);
+  }
+
+  if (options?.sort) {
+    params.set("sort", options.sort);
   }
 
   let res: Response;
