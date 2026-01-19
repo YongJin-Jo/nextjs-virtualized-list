@@ -10,12 +10,14 @@ export const base = style({
   cursor: "pointer",
   transition: "background-color 0.2s, border-color 0.2s, transform 0.1s",
   border: "none",
-  ":disabled": {
-    cursor: "not-allowed",
-    opacity: 0.5,
-  },
-  ":active:not(:disabled)": {
-    transform: "scale(0.98)",
+  selectors: {
+    "&:disabled": {
+      cursor: "not-allowed",
+      opacity: 0.5,
+    },
+    "&:active:not(:disabled)": {
+      transform: "scale(0.98)",
+    },
   },
 });
 
@@ -23,30 +25,38 @@ export const variants = styleVariants({
   primary: {
     backgroundColor: "#3b82f6",
     color: "#fff",
-    ":hover:not(:disabled)": {
-      backgroundColor: "#2563eb",
+    selectors: {
+      "&:hover:not(:disabled)": {
+        backgroundColor: "#2563eb",
+      },
     },
   },
   secondary: {
     backgroundColor: "#6b7280",
     color: "#fff",
-    ":hover:not(:disabled)": {
-      backgroundColor: "#4b5563",
+    selectors: {
+      "&:hover:not(:disabled)": {
+        backgroundColor: "#4b5563",
+      },
     },
   },
   outline: {
     backgroundColor: "transparent",
     color: "#3b82f6",
     border: "1px solid #3b82f6",
-    ":hover:not(:disabled)": {
-      backgroundColor: "rgba(59, 130, 246, 0.1)",
+    selectors: {
+      "&:hover:not(:disabled)": {
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+      },
     },
   },
   ghost: {
     backgroundColor: "transparent",
     color: "#6b7280",
-    ":hover:not(:disabled)": {
-      backgroundColor: "#f3f4f6",
+    selectors: {
+      "&:hover:not(:disabled)": {
+        backgroundColor: "#f3f4f6",
+      },
     },
   },
 });
