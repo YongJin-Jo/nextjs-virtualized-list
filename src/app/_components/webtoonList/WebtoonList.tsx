@@ -13,17 +13,20 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchWebtoons } from "@/api/webtoon";
 import SearchInput from "../searchInput/SearchInput";
+import { FilterBar } from "../filterBar";
 import EmptyResult from "../../../components/emptyResult";
 import ErrorState from "../../../components/errorState";
 import SearchStatus from "../searchStatus";
+import type { SortType, GenreFilter } from "@/services/webtoon.service";
 
 interface WebtoonListProps {
   initialData: Webtoon[];
   totalItems: number;
   count?: number;
+  genres: string[];
 }
 
 // hydration 상태 감지
@@ -35,10 +38,14 @@ export default function WebtoonList({
   initialData,
   totalItems,
   count = 20,
+  genres,
 }: WebtoonListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState<GenreFilter>(null);
+  const [selectedSort, setSelectedSort] = useState<SortType>("latest");
   const columns = useResponsiveColumns();
+  const queryClient = useQueryClient();
   const isHydrated = useSyncExternalStore(
     subscribe,
     getSnapshot,
@@ -46,6 +53,7 @@ export default function WebtoonList({
   );
 
   const isSearching = searchQuery.trim().length > 0;
+  const isFiltering = selectedGenre !== null || selectedSort !== "latest";
 
   const {
     data,
@@ -57,36 +65,54 @@ export default function WebtoonList({
     error,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ["webtoons", searchQuery],
-    queryFn: ({ pageParam }) => fetchWebtoons(pageParam, count, searchQuery),
+    queryKey: ["webtoons", searchQuery, selectedGenre, selectedSort],
+    queryFn: ({ pageParam }) =>
+      fetchWebtoons(pageParam, count, searchQuery, {
+        genre: selectedGenre,
+        sort: selectedSort,
+      }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.pagination.hasNextPage
         ? lastPage.pagination.page + 1
         : undefined,
-    // 검색 중이 아닐 때만 초기 데이터 사용
-    initialData: !isSearching
-      ? {
-          pages: [
-            {
-              items: initialData,
-              pagination: {
-                page: 1,
-                count,
-                totalItems,
-                totalPages: Math.ceil(totalItems / count),
-                hasNextPage: initialData.length < totalItems,
+    // 검색/필터 중이 아닐 때만 초기 데이터 사용
+    initialData:
+      !isSearching && !isFiltering
+        ? {
+            pages: [
+              {
+                items: initialData,
+                pagination: {
+                  page: 1,
+                  count,
+                  totalItems,
+                  totalPages: Math.ceil(totalItems / count),
+                  hasNextPage: initialData.length < totalItems,
+                },
               },
-            },
-          ],
-          pageParams: [1],
-        }
-      : undefined,
+            ],
+            pageParams: [1],
+          }
+        : undefined,
   });
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
-    // 스크롤을 맨 위로 이동
+    if (containerRef.current) {
+      containerRef.current.scrollTop = 0;
+    }
+  }, []);
+
+  const handleGenreChange = useCallback((genre: GenreFilter) => {
+    setSelectedGenre(genre);
+    if (containerRef.current) {
+      containerRef.current.scrollTop = 0;
+    }
+  }, []);
+
+  const handleSortChange = useCallback((sort: SortType) => {
+    setSelectedSort(sort);
     if (containerRef.current) {
       containerRef.current.scrollTop = 0;
     }
@@ -103,11 +129,47 @@ export default function WebtoonList({
     overscan: 1,
   });
 
+  // 다음 페이지 프리페칭 (더 일찍 미리 로드)
+  useEffect(() => {
+    if (!isHydrated || !hasNextPage || isFetchingNextPage) return;
+
+    const prefetchThreshold = allItems.length - 20;
+    if (endIndex >= prefetchThreshold) {
+      const nextPage = (data?.pageParams.length ?? 0) + 1;
+      queryClient.prefetchInfiniteQuery({
+        queryKey: ["webtoons", searchQuery, selectedGenre, selectedSort],
+        queryFn: ({ pageParam }) =>
+          fetchWebtoons(pageParam, count, searchQuery, {
+            genre: selectedGenre,
+            sort: selectedSort,
+          }),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) =>
+          lastPage.pagination.hasNextPage
+            ? lastPage.pagination.page + 1
+            : undefined,
+        pages: nextPage,
+      });
+    }
+  }, [
+    endIndex,
+    allItems.length,
+    hasNextPage,
+    isFetchingNextPage,
+    isHydrated,
+    queryClient,
+    searchQuery,
+    selectedGenre,
+    selectedSort,
+    count,
+    data?.pageParams.length,
+  ]);
+
   // 끝에 도달하면 다음 페이지 로드
   useEffect(() => {
     if (!isHydrated) return;
 
-    const threshold = allItems.length - 10; // 마지막 10개 전에 로드
+    const threshold = allItems.length - 10;
     if (endIndex >= threshold && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
@@ -143,6 +205,14 @@ export default function WebtoonList({
   return (
     <>
       <SearchInput onSearch={handleSearch} />
+
+      <FilterBar
+        genres={genres}
+        selectedGenre={selectedGenre}
+        selectedSort={selectedSort}
+        onGenreChange={handleGenreChange}
+        onSortChange={handleSortChange}
+      />
 
       {isSearching && (
         <SearchStatus

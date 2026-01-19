@@ -44,10 +44,6 @@ export const grid = style({
     "(min-width: 1024px)": {
       gridTemplateColumns: "repeat(4, 1fr)",
     },
-    // Laptop L (1440px 이상)
-    "(min-width: 1440px)": {
-      gridTemplateColumns: "repeat(5, 1fr)",
-    },
   },
 });
 
