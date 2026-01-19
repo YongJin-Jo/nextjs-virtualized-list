@@ -9,9 +9,15 @@ export const card = style({
   backgroundColor: vars.color.background,
   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
   transition: "transform 0.2s, box-shadow 0.2s",
+  cursor: "pointer",
+  textDecoration: "none",
   ":hover": {
     transform: "translateY(-4px)",
     boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
+  },
+  ":focus-visible": {
+    outline: `2px solid ${vars.color.primary}`,
+    outlineOffset: "2px",
   },
 });
 

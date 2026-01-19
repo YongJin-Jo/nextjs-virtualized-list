@@ -1,5 +1,6 @@
 import { memo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import type { Webtoon } from "@/types/webtoon";
 import * as styles from "./Card.css";
 
@@ -8,9 +9,12 @@ interface CardProps {
   priority?: boolean;
 }
 
-export const Card = memo(function Card({ webtoon, priority = false }: CardProps) {
+export const Card = memo(function Card({
+  webtoon,
+  priority = false,
+}: CardProps) {
   return (
-    <article className={styles.card}>
+    <Link href={`/webtoon/${webtoon.id}`} className={styles.card}>
       <Image
         className={styles.thumbnail}
         src={webtoon.thumbnail}
@@ -38,6 +42,6 @@ export const Card = memo(function Card({ webtoon, priority = false }: CardProps)
           <span>♥ {webtoon.likeCount.toLocaleString()}</span>
         </div>
       </div>
-    </article>
+    </Link>
   );
 });
