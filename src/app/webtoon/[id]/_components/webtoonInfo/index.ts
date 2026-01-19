@@ -1,0 +1,1 @@
+export { WebtoonInfo } from "./WebtoonInfo";
