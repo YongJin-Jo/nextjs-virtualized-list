@@ -3,8 +3,10 @@ import { vars } from "@/styles/theme.css";
 
 export const page = style({
   minHeight: "100vh",
+  maxWidth: "1200px",
   padding: "24px",
   backgroundColor: vars.color.background,
+  margin: "0 auto",
 });
 
 export const title = style({

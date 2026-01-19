@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import * as styles from "./page.css";
 import WebtoonList from "./_components/webtoonList/WebtoonList";
-import { getWebtoons, getTotalWebtoons } from "@/services/webtoon.service";
+import {
+  getWebtoons,
+  getTotalWebtoons,
+  getAllGenres,
+} from "@/services/webtoon.service";
 
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 16;
 
 // SSR에서 메타데이터 생성
 export async function generateMetadata(): Promise<Metadata> {
@@ -33,6 +37,7 @@ export default function Home() {
   // 서비스 레이어를 통해 직접 데이터 가져오기 (SSR)
   const { items: initialData } = getWebtoons(1, ITEMS_PER_PAGE);
   const totalItems = getTotalWebtoons();
+  const genres = getAllGenres();
 
   return (
     <div className={styles.page}>
@@ -42,6 +47,7 @@ export default function Home() {
           initialData={initialData}
           totalItems={totalItems}
           count={ITEMS_PER_PAGE}
+          genres={genres}
         />
       </div>
     </div>
